@@ -1,110 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WinGo Predictor</title>
+  <title>WinGo Manual Predictor</title>
   <style>
     body {
+      background: #121212;
+      color: #00ffcc;
       font-family: Arial, sans-serif;
-      background: #1e1e1e;
-      color: #fff;
-      text-align: center;
       padding: 20px;
-    }
-    h2 { color: #00ffcc; }
-    #animationBox img {
-      width: 100px;
-      animation: blink 1s infinite;
-    }
-    @keyframes blink {
-      50% { opacity: 0.1; }
     }
     input, button {
       padding: 10px;
-      margin: 5px;
-      font-size: 16px;
+      font-size: 18px;
+      margin-right: 10px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
     }
   </style>
 </head>
 <body>
-  <h2>🧠 WinGo Predictor (Smart Switch Mode)</h2>
+  <h2>🧠 Manual WinGo Prediction Tool</h2>
+  <input type="number" id="periodInput" placeholder="Enter period number (e.g. 10765)" />
+  <button onclick="predict()">Predict</button>
 
-  <!-- Manual Prediction -->
-  <h3>📟 Manual Prediction</h3>
-  <input type="number" id="manualPeriod" placeholder="Enter Period Number (10764+)"/>
-  <button onclick="manualPredict()">🔮 Predict</button>
-  <div id="manualResult"></div>
-
-  <!-- Auto Prediction -->
-  <h3>🤖 Auto Prediction (Live from Game)</h3>
-  <button onclick="startAuto()">▶️ Start Auto Mode</button>
-  <button onclick="stopAuto()">⛔ Stop Auto</button>
-  <div id="autoResult"></div>
-  <div id="animationBox"></div>
+  <div id="result"></div>
 
   <script>
-    let autoInterval;
-    let autoActive = false;
+    function predict() {
+      const input = document.getElementById('periodInput').value.trim();
+      const resultBox = document.getElementById('result');
 
-    function getPrediction(number) {
-      const num = parseInt(number);
-      let result = {
-        number: num,
-        type: num >= 5 ? 'Big' : 'Small',
-        color: (num === 0 || num === 5) ? 'Violet' : (num % 2 === 0 ? 'Red' : 'Green')
-      };
-      return result;
-    }
-
-    function manualPredict() {
-      stopAuto(); // Auto off
-      const period = document.getElementById("manualPeriod").value;
-      if (period < 10764) {
-        document.getElementById("manualResult").innerText = "⚠️ Enter period > 10763!";
+      if (!input || input.length < 5) {
+        resultBox.innerHTML = "⚠️ Enter valid 5+ digit period number!";
         return;
       }
-      const lastDigit = period.slice(-1);
-      const prediction = getPrediction(lastDigit);
-      document.getElementById("manualResult").innerHTML = `
-        🔢 Number: ${prediction.number}<br>
-        🔮 Prediction: <b>${prediction.type}</b><br>
-        🎨 Color: <b>${prediction.color}</b>
+
+      const lastDigit = parseInt(input.slice(-1));
+      const size = lastDigit >= 5 ? "Big" : "Small";
+      const color = ["Red", "Green", "Violet"][lastDigit % 3];
+
+      resultBox.innerHTML = `
+        ✅ <b>Prediction:</b><br>
+        Number (last digit): <b>${lastDigit}</b><br>
+        Big/Small: <b>${size}</b><br>
+        Color: <b>${color}</b>
       `;
-    }
-
-    function startAuto() {
-      document.getElementById("manualResult").innerHTML = "";
-      autoActive = true;
-      autoInterval = setInterval(() => {
-        const el = document.querySelector(".Betting__C-numC");
-        if (el && el.innerText.trim()) {
-          const liveNumber = el.innerText.trim();
-          const prediction = getPrediction(liveNumber);
-          document.getElementById("autoResult").innerHTML = `
-            📡 Live Number: ${liveNumber}<br>
-            🔮 Prediction: <b>${prediction.type}</b><br>
-            🎨 Color: <b>${prediction.color}</b>
-          `;
-          showAnimation(prediction, liveNumber);
-        }
-      }, 5000); // check every 5 seconds
-    }
-
-    function stopAuto() {
-      autoActive = false;
-      clearInterval(autoInterval);
-      document.getElementById("autoResult").innerHTML = "⛔ Auto mode stopped";
-      document.getElementById("animationBox").innerHTML = "";
-    }
-
-    function showAnimation(prediction, actual) {
-      let expected = getPrediction(actual);
-      let correct = prediction.type === expected.type;
-      let img = document.createElement("img");
-      img.src = correct ? "flower.gif" : "boom.gif";
-      document.getElementById("animationBox").innerHTML = "";
-      document.getElementById("animationBox").appendChild(img);
     }
   </script>
 </body>
