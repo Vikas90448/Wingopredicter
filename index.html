@@ -1,95 +1,110 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>WinGo Prediction Tool</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WinGo Predictor</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #111; color: #fff; text-align: center; padding: 20px; }
-    input, button { padding: 10px; margin: 8px; background: #222; color: #0f0; border: 1px solid #0f0; }
-    .big { color: lime; font-weight: bold; }
-    .small { color: red; font-weight: bold; }
-    #animationBox img { width: 120px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #1e1e1e;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    h2 { color: #00ffcc; }
+    #animationBox img {
+      width: 100px;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0.1; }
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
-  <h1>🔮 WinGo Predictor (Smart Switch Mode)</h1>
+  <h2>🧠 WinGo Predictor (Smart Switch Mode)</h2>
 
-  <!-- Manual Prediction Section -->
-  <h3>📥 Manual Prediction</h3>
-  <input type="number" id="manualPeriod" placeholder="Enter Period Number (10764+)" />
-  <button onclick="manualPredict()">Predict</button>
+  <!-- Manual Prediction -->
+  <h3>📟 Manual Prediction</h3>
+  <input type="number" id="manualPeriod" placeholder="Enter Period Number (10764+)"/>
+  <button onclick="manualPredict()">🔮 Predict</button>
   <div id="manualResult"></div>
 
-  <hr>
-
-  <!-- Auto Prediction Section -->
-  <h3>⏱️ Auto Prediction (Live Simulated)</h3>
+  <!-- Auto Prediction -->
+  <h3>🤖 Auto Prediction (Live from Game)</h3>
   <button onclick="startAuto()">▶️ Start Auto Mode</button>
   <button onclick="stopAuto()">⛔ Stop Auto</button>
   <div id="autoResult"></div>
   <div id="animationBox"></div>
 
   <script>
-    let autoInterval = null;
-    let autoRunning = false;
-    let gameResults = [
-      { period: 10759, number: 3 },
-      { period: 10760, number: 7 },
-      { period: 10761, number: 1 },
-      { period: 10762, number: 6 },
-      { period: 10763, number: 2 }
-    ];
+    let autoInterval;
+    let autoActive = false;
 
-    function getResultType(num) { return num >= 5 ? "Big" : "Small"; }
-    function getPrediction(last5) {
-      const types = last5.map(n => getResultType(n));
-      const bigs = types.filter(t => t === "Big").length;
-      return bigs > types.length - bigs ? "Big" : "Small";
+    function getPrediction(number) {
+      const num = parseInt(number);
+      let result = {
+        number: num,
+        type: num >= 5 ? 'Big' : 'Small',
+        color: (num === 0 || num === 5) ? 'Violet' : (num % 2 === 0 ? 'Red' : 'Green')
+      };
+      return result;
     }
-    function getRandomNumber() { return Math.floor(Math.random() * 10); }
+
     function manualPredict() {
-      stopAuto();
-      const input = parseInt(document.getElementById("manualPeriod").value);
-      const resultBox = document.getElementById("manualResult");
-      if (isNaN(input) || input <= 10763) {
-        resultBox.innerHTML = `<span style="color:yellow">⚠️ Enter period number > 10763</span>`;
+      stopAuto(); // Auto off
+      const period = document.getElementById("manualPeriod").value;
+      if (period < 10764) {
+        document.getElementById("manualResult").innerText = "⚠️ Enter period > 10763!";
         return;
       }
-      const last5 = gameResults.slice(-5).map(g => g.number);
-      const prediction = getPrediction(last5);
-      const predictedNumber = getRandomNumber();
-      const type = getResultType(predictedNumber);
-      resultBox.innerHTML = `<p>📅 Period: ${input}</p><p>Predicted Number: <strong>${predictedNumber}</strong></p><p>Prediction: <span class="${type.toLowerCase()}">${type}</span></p>`;
+      const lastDigit = period.slice(-1);
+      const prediction = getPrediction(lastDigit);
+      document.getElementById("manualResult").innerHTML = `
+        🔢 Number: ${prediction.number}<br>
+        🔮 Prediction: <b>${prediction.type}</b><br>
+        🎨 Color: <b>${prediction.color}</b>
+      `;
     }
+
     function startAuto() {
       document.getElementById("manualResult").innerHTML = "";
-      if (autoRunning) return;
-      autoRunning = true;
-      autoPredict();
-      autoInterval = setInterval(autoPredict, 60000);
+      autoActive = true;
+      autoInterval = setInterval(() => {
+        const el = document.querySelector(".Betting__C-numC");
+        if (el && el.innerText.trim()) {
+          const liveNumber = el.innerText.trim();
+          const prediction = getPrediction(liveNumber);
+          document.getElementById("autoResult").innerHTML = `
+            📡 Live Number: ${liveNumber}<br>
+            🔮 Prediction: <b>${prediction.type}</b><br>
+            🎨 Color: <b>${prediction.color}</b>
+          `;
+          showAnimation(prediction, liveNumber);
+        }
+      }, 5000); // check every 5 seconds
     }
+
     function stopAuto() {
-      if (autoInterval) { clearInterval(autoInterval); autoRunning = false; }
+      autoActive = false;
+      clearInterval(autoInterval);
+      document.getElementById("autoResult").innerHTML = "⛔ Auto mode stopped";
+      document.getElementById("animationBox").innerHTML = "";
     }
-    function autoPredict() {
-      const last5 = gameResults.slice(-5).map(r => r.number);
-      const prediction = getPrediction(last5);
-      const nextPeriod = gameResults[gameResults.length - 1].period + 1;
-      const predictedNumber = getRandomNumber();
-      const actualType = getResultType(predictedNumber);
-      document.getElementById("autoResult").innerHTML = `<p>🕒 Period: ${nextPeriod}</p><p>Predicted Number: <strong>${predictedNumber}</strong></p><p>Prediction: <span class="${actualType.toLowerCase()}">${actualType}</span></p>`;
-      if (prediction === actualType) {
-        showAnimation("flower");
-      } else {
-        showAnimation("boom");
-      }
-      gameResults.push({ period: nextPeriod, number: predictedNumber });
-    }
-    function showAnimation(type) {
-      const box = document.getElementById("animationBox");
-      const gif = type === "flower" ? "flower.gif" : "boom.gif";
-      box.innerHTML = `<img src="${gif}" alt="${type}">`;
-      setTimeout(() => box.innerHTML = "", 4000);
+
+    function showAnimation(prediction, actual) {
+      let expected = getPrediction(actual);
+      let correct = prediction.type === expected.type;
+      let img = document.createElement("img");
+      img.src = correct ? "flower.gif" : "boom.gif";
+      document.getElementById("animationBox").innerHTML = "";
+      document.getElementById("animationBox").appendChild(img);
     }
   </script>
 </body>
