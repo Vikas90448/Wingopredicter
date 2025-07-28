@@ -1,53 +1,98 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>WinGo Manual Predictor</title>
+  <meta charset="UTF-8">
+  <title>91Club WinGo Predictor + History</title>
   <style>
     body {
-      background: #121212;
+      background: #111;
       color: #00ffcc;
-      font-family: Arial, sans-serif;
+      font-family: monospace;
       padding: 20px;
     }
-    input, button {
-      padding: 10px;
-      font-size: 18px;
-      margin-right: 10px;
-    }
-    #result {
+    h1 { color: #0ff; }
+    #status { font-size: 18px; margin-bottom: 20px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
       margin-top: 20px;
-      font-size: 20px;
     }
+    th, td {
+      border: 1px solid #00ffcc;
+      padding: 8px;
+      text-align: center;
+    }
+    th { background: #222; }
   </style>
 </head>
 <body>
-  <h2>🧠 Manual WinGo Prediction Tool</h2>
-  <input type="number" id="periodInput" placeholder="Enter period number (e.g. 10765)" />
-  <button onclick="predict()">Predict</button>
+  <h1>🎯 91Club WinGo Live Predictor + History</h1>
+  <div id="status">⏳ Waiting for live data...</div>
 
-  <div id="result"></div>
+  <table>
+    <thead>
+      <tr>
+        <th>Period</th>
+        <th>Last Digit</th>
+        <th>Big/Small</th>
+        <th>Color</th>
+      </tr>
+    </thead>
+    <tbody id="historyTable">
+    </tbody>
+  </table>
 
   <script>
-    function predict() {
-      const input = document.getElementById('periodInput').value.trim();
-      const resultBox = document.getElementById('result');
+    const history = [];
 
-      if (!input || input.length < 5) {
-        resultBox.innerHTML = "⚠️ Enter valid 5+ digit period number!";
-        return;
-      }
-
-      const lastDigit = parseInt(input.slice(-1));
-      const size = lastDigit >= 5 ? "Big" : "Small";
-      const color = ["Red", "Green", "Violet"][lastDigit % 3];
-
-      resultBox.innerHTML = `
-        ✅ <b>Prediction:</b><br>
-        Number (last digit): <b>${lastDigit}</b><br>
-        Big/Small: <b>${size}</b><br>
-        Color: <b>${color}</b>
-      `;
+    function predict(period) {
+      if (!period || period.length < 5 || parseInt(period) <= 10763) return null;
+      let lastDigit = parseInt(period.slice(-1));
+      let size = lastDigit >= 5 ? "Big" : "Small";
+      let color = ["Red", "Green", "Violet"][lastDigit % 3];
+      return { lastDigit, size, color };
     }
+
+    function updateHistory(period, prediction) {
+      history.unshift({ period, ...prediction });
+      if (history.length > 20) history.pop();
+
+      const table = document.getElementById("historyTable");
+      table.innerHTML = "";
+      history.forEach(row => {
+        table.innerHTML += `
+          <tr>
+            <td>${row.period}</td>
+            <td>${row.lastDigit}</td>
+            <td>${row.size}</td>
+            <td>${row.color}</td>
+          </tr>`;
+      });
+    }
+
+    function fetchPeriod() {
+      try {
+        let liveNumber = document.querySelector('.Betting__C-numC');
+        if (liveNumber) {
+          let num = liveNumber.innerText.trim();
+          let next = (parseInt(num) + 1).toString();
+          let pred = predict(next);
+          if (pred) {
+            document.getElementById("status").innerHTML =
+              "<b>Predicted for next period " + next + "</b><br>" +
+              `🔢 Last Digit: ${pred.lastDigit}<br>🎲 Big/Small: <b>${pred.size}</b><br>🎨 Color: <b>${pred.color}</b>`;
+            updateHistory(next, pred);
+          }
+        } else {
+          document.getElementById("status").innerText = "Waiting for live number...";
+        }
+      } catch (e) {
+        document.getElementById("status").innerText = "Error fetching data";
+      }
+    }
+
+    setInterval(fetchPeriod, 3000);
   </script>
 </body>
 </html>
