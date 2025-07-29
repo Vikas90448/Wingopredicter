@@ -1,112 +1,145 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WinGo Predictor</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f3f3f3;
-            color: #333;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px #ddd;
-        }
-        
-        h1 {
-            color: #ff6600;
-            text-align: center;
-        }
-        
-        input,
-        button {
-            padding: 12px;
-            font-size: 16px;
-            margin-top: 10px;
-            width: 100%;
-        }
-        
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            font-size: 18px;
-            border-radius: 5px;
-        }
-        
-        .notification {
-            padding: 10px;
-            border-radius: 5px;
-            font-weight: bold;
-            animation: blink 1s infinite;
-            margin-top: 20px;
-        }
-        
-        @keyframes blink {
-            0%,
-            100% {
-                background: #c9ffc9;
-                color: #0a0;
-            }
-            50% {
-                background: #fff;
-                color: #0a0;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VIP Mod Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background: #000;
+      color: #00ff00;
+      font-family: 'Orbitron', sans-serif;
+      margin: 0;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+    #timerBox {
+      display: block;
+      position: fixed;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 20px;
+      border: 2px solid #00ff00;
+      border-radius: 15px;
+      box-shadow: 0 0 20px #00ff00;
+      width: 350px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      animation: fadeIn 0.5s ease-in-out;
+      z-index: 10;
+      left: calc(50% - 175px);
+      top: calc(50% - 180px);
+    }
+    h3 {
+      margin-bottom: 15px;
+      color: #00ff00;
+      font-size: 1.6em;
+    }
+    #period1m, #timer1m {
+      font-size: 1.2em;
+      margin: 10px 0;
+    }
+    .result {
+      margin-top: 15px;
+      font-size: 1.5em;
+    }
+    .big { color: gold; }
+    .small { color: cyan; }
+    .red { color: red; }
+    .green { color: lime; }
+    .violet { color: violet; }
+    .number {
+      font-size: 2em;
+      color: orange;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
 </head>
-
 <body>
-    <div class="container">
-        <h1>WinGo Predictor 🔮</h1>
+  <canvas id="matrix"></canvas>
+  <div id="timerBox">
+    <h3>🔮 VIP Prediction Panel</h3>
+    <div id="period1m">Period:</div>
+    <div id="timer1m">Timer:</div>
+    <div class="result" id="bigSmall"></div>
+    <div class="result number" id="predictedNumber"></div>
+    <div class="result" id="predictedColor"></div>
+  </div>
 
-        <label>Enter Period Number:</label>
-        <input type="number" id="periodInput" placeholder="e.g. 20250729100010150" />
-        <button onclick="predict()">Predict</button>
+  <script>
+    // Matrix animation
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    const chars = '0101HACKVIPCYPHER';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff00';
+      ctx.font = fontSize + 'px monospace';
+      drops.forEach((y, i) => {
+        const text = chars.charAt(Math.floor(Math.random() * chars.length));
+        ctx.fillText(text, i * fontSize, y * fontSize);
+        if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      });
+    }
+    setInterval(drawMatrix, 33);
 
-        <div id="result" class="result"></div>
-        <div id="popup" class="notification" style="display:none;"></div>
-    </div>
+    // Prediction timer
+    let lastMinute = -1;
+    setInterval(() => {
+      const now = new Date();
+      const seconds = now.getUTCSeconds();
+      const remainingSeconds = 60 - seconds;
+      const minutes = now.getUTCMinutes();
+      const hours = now.getUTCHours();
+      const totalMinutes = hours * 60 + minutes;
 
-    <script>
-        function predict() {
-            const period = document.getElementById('periodInput').value.trim();
-            if (period.length < 5) {
-                alert("Please enter a valid period number.");
-                return;
-            }
+      const year = now.getUTCFullYear();
+      const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(now.getUTCDate()).padStart(2, '0');
+      const dateStr = `${year}${month}${day}`;
+      const periodNumber = dateStr + '1000' + String(10001 + totalMinutes);
+      document.getElementById('period1m').textContent = 'Period: ' + periodNumber;
+      document.getElementById('timer1m').textContent = `Timer: ${String(remainingSeconds).padStart(2, '0')}s`;
 
-            const lastDigit = parseInt(period.slice(-1));
-            const isBig = lastDigit >= 5;
-            const color = (lastDigit === 0 || lastDigit === 5) ? "Violet" :
-                (lastDigit % 2 === 0) ? "Red" : "Green";
-
-            const predictionText = `
-        Period: ${period}<br/>
-        ➤ Prediction: <strong>${isBig ? 'Big' : 'Small'}</strong><br/>
-        ➤ Color: <strong>${color}</strong><br/>
-        ➤ Number End: ${lastDigit}
-      `;
-
-            document.getElementById('result').innerHTML = predictionText;
-            showPopup(`${isBig ? 'Big' : 'Small'} coming! 🎯 Color: ${color}`);
+      // New prediction only at start of each minute
+      if (seconds === 0 && lastMinute !== minutes) {
+        lastMinute = minutes;
+        const number = Math.floor(Math.random() * 10);
+        const bigSmall = number >= 5 ? 'Big' : 'Small';
+        let color = '';
+        if (number === 0 || number === 5) {
+          color = 'Violet';
+        } else if (number % 2 === 0) {
+          color = 'Green';
+        } else {
+          color = 'Red';
         }
 
-        function showPopup(msg) {
-            const popup = document.getElementById('popup');
-            popup.innerHTML = msg;
-            popup.style.display = 'block';
-            setTimeout(() => popup.style.display = 'none', 6000);
-        }
-    </script>
+        document.getElementById('bigSmall').innerHTML = `🔹 <span class="${bigSmall.toLowerCase()}">${bigSmall}</span>`;
+        document.getElementById('predictedNumber').innerHTML = `🔢 Number: ${number}`;
+        document.getElementById('predictedColor').innerHTML = `🎨 Color: <span class="${color.toLowerCase()}">${color}</span>`;
+      }
+    }, 1000);
+  </script>
 </body>
-
 </html>
