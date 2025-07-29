@@ -1,98 +1,112 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>91Club WinGo Predictor + History</title>
-  <style>
-    body {
-      background: #111;
-      color: #00ffcc;
-      font-family: monospace;
-      padding: 20px;
-    }
-    h1 { color: #0ff; }
-    #status { font-size: 18px; margin-bottom: 20px; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #00ffcc;
-      padding: 8px;
-      text-align: center;
-    }
-    th { background: #222; }
-  </style>
-</head>
-<body>
-  <h1>🎯 91Club WinGo Live Predictor + History</h1>
-  <div id="status">⏳ Waiting for live data...</div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Period</th>
-        <th>Last Digit</th>
-        <th>Big/Small</th>
-        <th>Color</th>
-      </tr>
-    </thead>
-    <tbody id="historyTable">
-    </tbody>
-  </table>
-
-  <script>
-    const history = [];
-
-    function predict(period) {
-      if (!period || period.length < 5 || parseInt(period) <= 10763) return null;
-      let lastDigit = parseInt(period.slice(-1));
-      let size = lastDigit >= 5 ? "Big" : "Small";
-      let color = ["Red", "Green", "Violet"][lastDigit % 3];
-      return { lastDigit, size, color };
-    }
-
-    function updateHistory(period, prediction) {
-      history.unshift({ period, ...prediction });
-      if (history.length > 20) history.pop();
-
-      const table = document.getElementById("historyTable");
-      table.innerHTML = "";
-      history.forEach(row => {
-        table.innerHTML += `
-          <tr>
-            <td>${row.period}</td>
-            <td>${row.lastDigit}</td>
-            <td>${row.size}</td>
-            <td>${row.color}</td>
-          </tr>`;
-      });
-    }
-
-    function fetchPeriod() {
-      try {
-        let liveNumber = document.querySelector('.Betting__C-numC');
-        if (liveNumber) {
-          let num = liveNumber.innerText.trim();
-          let next = (parseInt(num) + 1).toString();
-          let pred = predict(next);
-          if (pred) {
-            document.getElementById("status").innerHTML =
-              "<b>Predicted for next period " + next + "</b><br>" +
-              `🔢 Last Digit: ${pred.lastDigit}<br>🎲 Big/Small: <b>${pred.size}</b><br>🎨 Color: <b>${pred.color}</b>`;
-            updateHistory(next, pred);
-          }
-        } else {
-          document.getElementById("status").innerText = "Waiting for live number...";
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WinGo Predictor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f3f3f3;
+            color: #333;
+            padding: 20px;
         }
-      } catch (e) {
-        document.getElementById("status").innerText = "Error fetching data";
-      }
-    }
+        
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #ddd;
+        }
+        
+        h1 {
+            color: #ff6600;
+            text-align: center;
+        }
+        
+        input,
+        button {
+            padding: 12px;
+            font-size: 16px;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 5px;
+        }
+        
+        .notification {
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            animation: blink 1s infinite;
+            margin-top: 20px;
+        }
+        
+        @keyframes blink {
+            0%,
+            100% {
+                background: #c9ffc9;
+                color: #0a0;
+            }
+            50% {
+                background: #fff;
+                color: #0a0;
+            }
+        }
+    </style>
+</head>
 
-    setInterval(fetchPeriod, 3000);
-  </script>
+<body>
+    <div class="container">
+        <h1>WinGo Predictor 🔮</h1>
+
+        <label>Enter Period Number:</label>
+        <input type="number" id="periodInput" placeholder="e.g. 20250729100010150" />
+        <button onclick="predict()">Predict</button>
+
+        <div id="result" class="result"></div>
+        <div id="popup" class="notification" style="display:none;"></div>
+    </div>
+
+    <script>
+        function predict() {
+            const period = document.getElementById('periodInput').value.trim();
+            if (period.length < 5) {
+                alert("Please enter a valid period number.");
+                return;
+            }
+
+            const lastDigit = parseInt(period.slice(-1));
+            const isBig = lastDigit >= 5;
+            const color = (lastDigit === 0 || lastDigit === 5) ? "Violet" :
+                (lastDigit % 2 === 0) ? "Red" : "Green";
+
+            const predictionText = `
+        Period: ${period}<br/>
+        ➤ Prediction: <strong>${isBig ? 'Big' : 'Small'}</strong><br/>
+        ➤ Color: <strong>${color}</strong><br/>
+        ➤ Number End: ${lastDigit}
+      `;
+
+            document.getElementById('result').innerHTML = predictionText;
+            showPopup(`${isBig ? 'Big' : 'Small'} coming! 🎯 Color: ${color}`);
+        }
+
+        function showPopup(msg) {
+            const popup = document.getElementById('popup');
+            popup.innerHTML = msg;
+            popup.style.display = 'block';
+            setTimeout(() => popup.style.display = 'none', 6000);
+        }
+    </script>
 </body>
+
 </html>
